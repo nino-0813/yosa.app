@@ -27,7 +27,7 @@ function rowToVisit(r: VisitRow): Visit {
 /** このユーザーの来店記録を、来店順（古い→新しい）で取得 */
 export async function fetchVisits(lineUserId: string): Promise<Visit[]> {
   const { data, error } = await supabase
-    .from("visits")
+    .from("onu_visits")
     .select("visited_on, cold, swelling, sleep, bowel, mood")
     .eq("line_user_id", lineUserId)
     .order("visited_on", { ascending: true });
@@ -38,7 +38,7 @@ export async function fetchVisits(lineUserId: string): Promise<Visit[]> {
 /** 顧客行を用意（なければ作る・名前は更新） */
 async function ensureCustomer(lineUserId: string, displayName?: string | null) {
   const { error } = await supabase
-    .from("customers")
+    .from("onu_customers")
     .upsert(
       { line_user_id: lineUserId, display_name: displayName ?? null },
       { onConflict: "line_user_id" },
@@ -53,7 +53,7 @@ export async function saveTodayVisit(
   scores: Scores,
 ): Promise<void> {
   await ensureCustomer(lineUserId, displayName);
-  const { error } = await supabase.from("visits").upsert(
+  const { error } = await supabase.from("onu_visits").upsert(
     {
       line_user_id: lineUserId,
       visited_on: todayIso(),
@@ -72,7 +72,7 @@ export async function resetVisits(
 ): Promise<void> {
   await ensureCustomer(lineUserId, displayName);
   const { error: delErr } = await supabase
-    .from("visits")
+    .from("onu_visits")
     .delete()
     .eq("line_user_id", lineUserId);
   if (delErr) throw delErr;
@@ -89,7 +89,7 @@ export async function resetVisits(
         ...v.scores,
       };
     });
-    const { error: insErr } = await supabase.from("visits").insert(rows);
+    const { error: insErr } = await supabase.from("onu_visits").insert(rows);
     if (insErr) throw insErr;
   }
 }

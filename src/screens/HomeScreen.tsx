@@ -1,7 +1,8 @@
 import { Visit, FREE_EVERY, formatDateJP } from "../data";
 import { homeGreeting } from "../insights";
-import { SteamMark, ChevronRight } from "../components/icons";
+import { ChevronRight } from "../components/icons";
 import { RewardGauge } from "../components/RewardGauge";
+import { BrandBlock } from "../components/Wordmark";
 import type { Tab } from "../App";
 
 interface Props {
@@ -21,12 +22,10 @@ export function HomeScreen({ visits, recordedToday, go, userName }: Props) {
 
   return (
     <div>
-      <div className="home-head">
-        <SteamMark size={34} className="home-steam" />
-        <span className="kicker">
-          {userName ? `${userName} さんのじぶんノート` : "じぶんノート"}
-        </span>
-      </div>
+      <BrandBlock tagline="あたためる、私を。" />
+      {userName && (
+        <p className="home-welcome">{userName} さん、おかえりなさい。</p>
+      )}
 
       {/* 今日の一言 — ここが勝負どころ */}
       <section className="card greeting">

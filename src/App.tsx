@@ -66,7 +66,7 @@ export function App() {
       {framed && (
         <div className="liff-bar">
           <span>9:41</span>
-          <span className="liff-title">よもぎ蒸し ◯◯ · LINE</span>
+          <span className="liff-title">ON:U · LINE</span>
           <span>●●●</span>
         </div>
       )}

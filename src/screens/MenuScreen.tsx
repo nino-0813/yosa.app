@@ -24,7 +24,7 @@ export function MenuScreen({ onReset }: Props) {
   return (
     <div>
       <span className="kicker">メニュー</span>
-      <h1 className="page-title">よもぎ蒸し ◯◯</h1>
+      <h1 className="page-title">ON:U｜韓国よもぎ蒸し</h1>
 
       <section className="card menu-group">
         <Row label="次回の予約をする" sub="店の予約ページへ" />
@@ -67,7 +67,7 @@ export function MenuScreen({ onReset }: Props) {
         </div>
       </section>
 
-      <p className="menu-foot muted">よもぎ蒸し じぶんノート · v0.1</p>
+      <p className="menu-foot muted">ON:U · Korean Herbal Steam · v0.1</p>
     </div>
   );
 }

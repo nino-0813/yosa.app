@@ -1,18 +1,20 @@
 :root {
-  /* 温・土・薬草・湯気 — warm washi paper, mugwort green, clay accent, ink text */
-  --paper: #f6f1e9;
-  --surface: #fcfaf5;
-  --surface-2: #efe7d8;
-  --moss: #5c6e4f;
-  --moss-deep: #3f4f37;
-  --moss-soft: #aeb79f;
-  --clay: #bd7350;
+  /* ON:U（온유）— ivory / beige / terracotta / olive green / gold。韓国コスメ的に洗練 */
+  --paper: #f7f2e8; /* アイボリー */
+  --surface: #fdfbf6;
+  --surface-2: #efe7d6; /* ベージュ */
+  --moss: #5f6b4a; /* オリーブグリーン */
+  --moss-deep: #404a30;
+  --moss-soft: #b0b596;
+  --clay: #c1764f; /* テラコッタ */
   --clay-deep: #a55f3f;
-  --clay-soft: #e7cdba;
-  --ink: #3b362e;
-  --ink-soft: #8a8173;
-  --ink-faint: #b6ad9d;
-  --line: #e6ddcc;
+  --clay-soft: #e8cdb9;
+  --gold: #b08d4f; /* ゴールド（差し色・細い罫） */
+  --gold-soft: #d8c08a;
+  --ink: #3a342b;
+  --ink-soft: #8a8072;
+  --ink-faint: #b7ad9c;
+  --line: #e7ddcb;
   --steam: rgba(255, 255, 255, 0.7);
 
   --radius: 18px;
@@ -22,8 +24,52 @@
 
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 
+  --font-logo: "Cormorant", "Shippori Mincho", serif;
   --font-head: "Shippori Mincho", serif;
   --font-body: "Zen Kaku Gothic New", system-ui, sans-serif;
+}
+
+/* ---------- ON:U wordmark ---------- */
+.wordmark {
+  font-family: var(--font-logo);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--ink);
+  line-height: 1;
+  display: inline-flex;
+  align-items: baseline;
+}
+.wordmark .colon {
+  color: var(--gold);
+  margin: 0 0.02em;
+}
+.brand-block {
+  text-align: center;
+  padding: 14px 0 6px;
+}
+.brand-block .wordmark {
+  font-size: 30px;
+}
+.brand-sub {
+  font-family: var(--font-logo);
+  font-size: 11px;
+  letter-spacing: 0.34em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-top: 7px;
+}
+.brand-rule {
+  width: 34px;
+  height: 1px;
+  background: var(--gold-soft);
+  margin: 11px auto 0;
+}
+.brand-tagline {
+  font-family: var(--font-head);
+  font-size: 13.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin: 11px 0 0;
 }
 
 * {
@@ -354,6 +400,12 @@ h1.page-title {
   gap: 8px;
   padding: 6px 0 10px;
   color: var(--moss);
+}
+.home-welcome {
+  text-align: center;
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
 }
 .greeting {
   background: linear-gradient(180deg, #fcfaf4, #f4eddf);

@@ -18,7 +18,11 @@ export interface LiffState {
   error: string | null;
 }
 
-const LIFF_ID = import.meta.env.VITE_LIFF_ID as string | undefined;
+// LINE MINIアプリの LIFF ID。環境変数があればそれを優先、無ければ開発用をデフォルトに。
+// （LIFF IDは公開情報。本番公開時は本番用ID 2010536896-dL4kgzyR に差し替える）
+const DEV_LIFF_ID = "2010536894-uhTekGBz";
+const LIFF_ID =
+  (import.meta.env.VITE_LIFF_ID as string | undefined) || DEV_LIFF_ID;
 
 export function useLiff(): LiffState {
   const [state, setState] = useState<LiffState>({
@@ -42,22 +46,25 @@ export function useLiff(): LiffState {
         await liff.init({ liffId: LIFF_ID });
         const inClient = liff.isInClient();
 
-        // 未ログインならログインへ（LINE内ではワンタップで戻ってくる）
-        if (!liff.isLoggedIn()) {
+        // LINEアプリの中で未ログインのときだけログインへ（普通のブラウザでは
+        // 強制ログインさせず、そのままプロト表示する）。
+        if (inClient && !liff.isLoggedIn()) {
           liff.login();
           return;
         }
 
         let profile: LiffProfile | null = null;
-        try {
-          const p = await liff.getProfile();
-          profile = {
-            userId: p.userId,
-            displayName: p.displayName,
-            pictureUrl: p.pictureUrl,
-          };
-        } catch {
-          // プロフィール取得に失敗してもUIは出す
+        if (liff.isLoggedIn()) {
+          try {
+            const p = await liff.getProfile();
+            profile = {
+              userId: p.userId,
+              displayName: p.displayName,
+              pictureUrl: p.pictureUrl,
+            };
+          } catch {
+            // プロフィール取得に失敗してもUIは出す
+          }
         }
 
         if (!cancelled) {

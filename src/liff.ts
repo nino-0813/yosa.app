@@ -5,6 +5,15 @@
 import { useEffect, useState } from "react";
 import liff from "@line/liff";
 
+/** LINEのIDトークン（Edge関数で本人検証に使う）。未ログイン/ブラウザでは null。 */
+export function getIdToken(): string | null {
+  try {
+    return liff.getIDToken();
+  } catch {
+    return null;
+  }
+}
+
 export interface LiffProfile {
   userId: string;
   displayName: string;

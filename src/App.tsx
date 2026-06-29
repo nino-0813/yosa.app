@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { METRICS, Scores, SEED_VISITS, Visit, todayIso } from "./data";
+import { useCallback, useEffect, useState } from "react";
+import { METRICS, Scores, Visit, todayIso } from "./data";
 import { useLiff } from "./liff";
+import { fetchVisits, resetVisits, saveTodayVisit } from "./api";
 import {
   HomeIcon,
   RecordIcon,
@@ -14,6 +15,7 @@ import { ChangeScreen } from "./screens/ChangeScreen";
 import { RewardScreen } from "./screens/RewardScreen";
 import { MenuScreen } from "./screens/MenuScreen";
 import { Toast } from "./components/Toast";
+import { Wordmark } from "./components/Wordmark";
 
 export type Tab = "home" | "record" | "change" | "reward" | "menu";
 
@@ -27,16 +29,36 @@ const TABS: { key: Tab; label: string; Icon: typeof HomeIcon; accent?: boolean }
   ];
 
 export function App() {
-  const [visits, setVisits] = useState<Visit[]>(SEED_VISITS);
+  const { ready, inClient, profile } = useLiff();
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("home");
   const [toast, setToast] = useState<string | null>(null);
-  const { inClient, profile } = useLiff();
 
-  // LINEの中ではLINE自身の枠が付くので、プロト用のスマホ枠は外して全画面表示にする
+  // 本人特定：LINE内ならLINEのユーザーID、ブラウザ確認時は 'demo'。
+  const lineUserId = ready ? profile?.userId ?? "demo" : null;
+  const displayName = profile?.displayName ?? (lineUserId === "demo" ? "ゲスト" : null);
+
   const framed = !inClient;
   useEffect(() => {
     document.body.classList.toggle("in-liff", inClient);
   }, [inClient]);
+
+  const load = useCallback(async (id: string) => {
+    setLoading(true);
+    try {
+      setVisits(await fetchVisits(id));
+    } catch (e) {
+      console.error("fetchVisits failed", e);
+      setVisits([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (lineUserId) load(lineUserId);
+  }, [lineUserId, load]);
 
   const recordedToday = visits.some((v) => v.date.slice(0, 10) === todayIso());
 
@@ -44,22 +66,34 @@ export function App() {
     setTab(t);
   }
 
-  function saveVisit(scores: Scores) {
-    const visit: Visit = { date: todayIso(), scores };
-    setVisits((prev) => {
-      // 同日記録は上書き（QR=来店確定は1日1回想定のデモ）
-      const others = prev.filter((v) => v.date.slice(0, 10) !== todayIso());
-      return [...others, visit];
-    });
-    setToast(`記録しました。来店${visits.filter((v) => v.date.slice(0, 10) !== todayIso()).length + 1}回目です。`);
-    setTab("change");
+  async function saveVisit(scores: Scores) {
+    if (!lineUserId) return;
+    try {
+      await saveTodayVisit(lineUserId, displayName, scores);
+      const fresh = await fetchVisits(lineUserId);
+      setVisits(fresh);
+      setToast(`記録しました。来店${fresh.length}回目です。`);
+      setTab("change");
+    } catch (e) {
+      console.error("saveVisit failed", e);
+      setToast("保存に失敗しました。通信を確認してもう一度お試しください。");
+    }
   }
 
-  function resetDemo(mode: "first" | "seed") {
-    setVisits(mode === "first" ? [] : SEED_VISITS);
-    setTab("home");
-    setToast(mode === "first" ? "初回の状態にしました。" : "デモデータに戻しました。");
+  async function resetDemo(mode: "first" | "seed") {
+    if (!lineUserId) return;
+    try {
+      await resetVisits(lineUserId, displayName, mode);
+      await load(lineUserId);
+      setTab("home");
+      setToast(mode === "first" ? "初回の状態にしました。" : "4回来店の状態に戻しました。");
+    } catch (e) {
+      console.error("resetDemo failed", e);
+      setToast("切り替えに失敗しました。");
+    }
   }
+
+  const visitNumber = visits.filter((v) => v.date.slice(0, 10) !== todayIso()).length + 1;
 
   return (
     <div className={framed ? "phone" : "app-fullbleed"}>
@@ -71,29 +105,34 @@ export function App() {
         </div>
       )}
 
-      <main className="screen" key={tab}>
-        <div className="screen-fade">
-          {tab === "home" && (
-            <HomeScreen
-              visits={visits}
-              recordedToday={recordedToday}
-              go={go}
-              userName={profile?.displayName ?? null}
-            />
-          )}
-          {tab === "record" && (
-            <RecordScreen
-              metrics={METRICS}
-              visitNumber={
-                visits.filter((v) => v.date.slice(0, 10) !== todayIso()).length + 1
-              }
-              onSave={saveVisit}
-            />
-          )}
-          {tab === "change" && <ChangeScreen visits={visits} go={go} />}
-          {tab === "reward" && <RewardScreen visits={visits} />}
-          {tab === "menu" && <MenuScreen onReset={resetDemo} />}
-        </div>
+      <main className="screen" key={loading ? "loading" : tab}>
+        {loading ? (
+          <div className="app-loading">
+            <Wordmark />
+            <p className="muted">読み込み中…</p>
+          </div>
+        ) : (
+          <div className="screen-fade">
+            {tab === "home" && (
+              <HomeScreen
+                visits={visits}
+                recordedToday={recordedToday}
+                go={go}
+                userName={profile?.displayName ?? null}
+              />
+            )}
+            {tab === "record" && (
+              <RecordScreen
+                metrics={METRICS}
+                visitNumber={visitNumber}
+                onSave={saveVisit}
+              />
+            )}
+            {tab === "change" && <ChangeScreen visits={visits} go={go} />}
+            {tab === "reward" && <RewardScreen visits={visits} />}
+            {tab === "menu" && <MenuScreen onReset={resetDemo} />}
+          </div>
+        )}
       </main>
 
       <nav className="tabbar">
